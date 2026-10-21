@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How hard is this problem?</title>
+<meta name="description" content="Paste a Codeforces or AtCoder problem and get its rating, or an estimate when there isn't one.">
+<style>
+:root{--bg:#faf8f4;--fg:#26231f;--mute:#7b756c;--line:#dcd6cb;--ac:#a3462a;--serif:Georgia,"Times New Roman",serif;--sans:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#1b1a18;--fg:#ece7de;--mute:#9a9387;--line:#36332e;--ac:#e08a6a}}
+*{box-sizing:border-box}
+html{background:var(--bg);color:var(--fg)}
+body{font:17px/1.65 var(--sans);max-width:34rem;margin:0 auto;padding:14vh 1.5rem 4rem}
+h1{font:400 2rem/1.25 var(--serif);margin:0 0 .6rem}
+.intro{color:var(--mute);margin:0 0 2.4rem}
+form{display:flex;gap:.75rem;align-items:baseline;border-bottom:1px solid var(--line)}
+form:focus-within{border-color:var(--fg)}
+input{flex:1;min-width:0;font:inherit;color:inherit;background:none;border:0;padding:.6rem 0;outline:none}
+input::placeholder{color:var(--mute);opacity:.7}
+button{font:inherit;color:var(--ac);background:none;border:0;padding:.6rem 0;cursor:pointer}
+button:hover{text-decoration:underline}
+.hint{color:var(--mute);font-size:.9rem;margin:.7rem 0 0}
+.hint a{color:inherit}
+#out{margin-top:3rem;min-height:8rem}
+.name{font:400 1.15rem/1.4 var(--serif);margin:0 0 .4rem}
+.name a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+.name a:hover{border-color:var(--ac)}
+.lead{font:400 1.35rem/1.5 var(--serif);margin:0 0 1rem}
+.lead strong{font-weight:400;color:var(--ac);font-size:1.9rem;white-space:nowrap}
+.note,.tags{color:var(--mute);font-size:.92rem;margin:.5rem 0 0}
+.error{color:var(--mute)}
+footer{margin-top:5rem;padding-top:1rem;border-top:1px solid var(--line);color:var(--mute);font-size:.85rem}
+footer a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+<h1>How hard is this problem?</h1>
+<p class="intro">Paste a Codeforces or AtCoder problem. If Codeforces hasn't rated it yet, I'll make an educated guess.</p>
+<form id="f" autocomplete="off">
+<input id="q" placeholder="1850A, or a link to the problem" aria-label="Problem link or ID" autofocus>
+<button>Check</button>
+</form>
+<p class="hint">Try <a href="#" data-ex="1850A">1850A</a> or <a href="#" data-ex="abc300_d">abc300_d</a></p>
+<section id="out" aria-live="polite"></section>
+</main>
+<footer><span id="meta">Loading…</span> · <a href="how_it_works.pdf">How it works</a></footer>
+<script src="logic.js"></script>
+<script>
+const out=document.getElementById("out"),meta=document.getElementById("meta"),q=document.getElementById("q")
+let data
+fetch("data.json").then(r=>r.json()).then(d=>{
+ data=d
+ meta.textContent="Updated "+d.generated+" · typical error ±"+d.model.mae+" points"
+ const h=decodeURIComponent(location.hash.slice(1))
+ if(h){q.value=h;run()}
+}).catch(()=>meta.textContent="Couldn't load data.")
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function run(){
+ out.replaceChildren()
+ if(!data){out.append(el("p","error","Still loading, try again in a second."));return}
+ if(!q.value.trim())return
+ const r=RatingLogic.describe(data,RatingLogic.parseInput(q.value))
+ if(r.error){out.append(el("p","error",r.error));return}
+ const n=el("p","name"),a=el("a",null,r.title)
+ a.href=r.url;a.target="_blank";a.rel="noopener noreferrer"
+ n.append(a)
+ const l=el("p","lead")
+ l.append(r.before+" ",el("strong",null,r.value),r.after)
+ out.append(n,l)
+ r.notes.forEach(x=>out.append(el("p","note",x)))
+ if(r.tags)out.append(el("p","tags",r.tags))
+ history.replaceState(null,"","#"+encodeURIComponent(q.value.trim()))
+}
+document.getElementById("f").addEventListener("submit",e=>{e.preventDefault();run()})
+document.querySelectorAll("[data-ex]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();q.value=a.dataset.ex;run()}))
+</script>
+</body>
+</html>
